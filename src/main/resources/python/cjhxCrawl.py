@@ -10,7 +10,7 @@ headers = {
 
 def get_fund_notice(fund_code):
     print(fund_code)
-    body = 'funcNo=904001&catalogId=1052&numPerPage=10&isPage=Y&curpage=1&state=3&fundid=001662'
+    body = 'funcNo=904001&catalogId=1052&numPerPage=157&isPage=Y&curpage=1&state=3&fundid=001662'
     # body = funcNo=904001&catalogId=1053&numPerPage=10&isPage=Y&curpage=1&state=3&fundid=001662
     r = requests.post(url, data=body, headers=headers)
     print(r.text)
