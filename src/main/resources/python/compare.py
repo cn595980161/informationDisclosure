@@ -1,4 +1,3 @@
-import difflib
 import json
 import os
 
@@ -6,7 +5,6 @@ import requests
 import xlrd
 import xlwt
 from docx import Document
-from lxml import etree
 from win32com import client as wc
 
 # import textract
@@ -23,23 +21,6 @@ headers = {
     'Content-Length': '83',
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
 }
-
-
-def get_fund():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'
-    }
-    r = requests.get('http://www.cjhxfund.com/main/qxcp/index.html', headers=headers)
-    html = etree.HTML(r.content.decode("utf-8"))
-    html_data = html.xpath('//a[@class="fundhide"]')
-    list = []
-    for data in html_data:
-        print(data.attrib['id'] + ':' + data.text)
-        if data.attrib['id'] != '001909':
-            data = {'fund_code': data.attrib['id'], 'fund_name': data.text}
-            list.append(data)
-
-    return list
 
 
 def crawl_notice(fund_code, catalogId, numPerPage):
@@ -89,10 +70,16 @@ def download(url, fileName, fund_code):
     with open(path, "wb") as f:
         f.write(res.content)
 
-    # doc转docx
-    if os.path.splitext(path)[1] == '.doc':
-        # 转换格式
-        doc_to_docx(path)
+
+# # doc转docx
+# def doc_to_docx(path):
+#     print('開始轉換格式')
+#     word = wc.Dispatch("Word.Application")
+#     doc = word.Documents.Open(path)
+#     doc.SaveAs(path + 'x', 12)
+#     doc.Close()
+#     word.Quit()
+#     print('結束轉換格式')
 
 
 # 将 .doc 文件转成 .docx
@@ -119,18 +106,23 @@ def doc_to_docx(path):
 
 
 # 读取年报
-def read_year_report(path, fund_code):
+def read_year_report(path):
+    # doc需要转换成docx
+    print(os.path.splitext(path)[1])
+    if os.path.splitext(path)[1] == '.doc':
+        # 转换格式
+        path = doc_to_docx(path)
+
     list = []
 
     doc = Document(path)
     year_table = read_spec_table(doc, '11.8 其他重大事件')
-    print('***' + fund_code)
     for i in range(len(year_table.rows)):
         if i > 0:
             # for j in range(len(year_table.columns)):
             # print(year_table.cell(i, 1).text)
             # print(year_table.cell(i, 3).text)
-            data = {'title': year_table.cell(i, 1).text, 'date': year_table.cell(i, 3).text, 'fund_code': fund_code}
+            data = {'title': year_table.cell(i, 1).text, 'date': year_table.cell(i, 3).text}
             list.append(data)
     return list
 
@@ -139,14 +131,13 @@ def read_year_report(path, fund_code):
 def read_year_reports(fund_code):
     list = []
     rootdir = year_report_path + r'\{}\{}'.format(version, fund_code)
-    if os.path.exists(rootdir):
-        file_list = os.listdir(rootdir)
-        for i in range(0, len(file_list)):
-            path = os.path.join(rootdir, file_list[i])
-            if os.path.isfile(path):
-                year_report = read_year_report(path, fund_code)
-                list.extend(year_report)
-                # print(path)
+    file_list = os.listdir(rootdir)
+    for i in range(0, len(file_list)):
+        path = os.path.join(rootdir, file_list[i])
+        if os.path.isfile(path):
+            year_report = read_year_report(path)
+            list.extend(year_report)
+            # print(path)
 
     return list
 
@@ -219,67 +210,6 @@ def create_excel(fund_code, fund_name, datas):
     # 这里只能保存扩展名为xls的，xlsx的格式不支持
 
 
-def create_diff_excel(datas):
-    # 新建一个Excel文件（只能通过新建写入）
-    data = xlwt.Workbook()
-    # 新建一个工作表
-    table = data.add_sheet('不一致', cell_overwrite_ok=True)
-    # 写入数据到A1单元格
-    # 初始化样式
-    style = xlwt.XFStyle()
-    style1 = xlwt.XFStyle()
-    style2 = xlwt.XFStyle()
-    borders = xlwt.Borders()
-    borders.left = 1
-    borders.right = 1
-    borders.top = 1
-    borders.bottom = 1
-
-    # 为样式创建字体
-    font = xlwt.Font()
-    # 指定字体名字
-    font.name = 'Times New Roman'
-    # 字体加粗
-    font.bold = True
-
-    # 为样式创建字体
-    font_red = xlwt.Font()
-    # 字体类型：比如宋体、仿宋也可以是汉仪瘦金书繁
-    font_red.name = 'Times New Roman'
-    # 设置字体颜色
-    font_red.colour_index = 2
-
-    # 将该font设定为style的字体
-    style.font = font
-    style.borders = borders
-
-    style1.borders = borders
-
-    style2.font = font_red
-    style2.borders = borders
-
-    # table.write(5, 0, u'Python Excel操作之xlwt创建表格', style)
-    tabletitle = ['基金代码', '基金简称', '年报公告标题', '年报披露日期', '公告标题', '披露日期']
-
-    for i in range(0, len(tabletitle)):
-        table.write(0, i, tabletitle[i], style)
-
-    for i in range(0, len(datas)):
-        # for j in range(0, len(tableA)):
-        table.write(i + 1, 0, datas[i]['fund_code'], style1)
-        table.write(i + 1, 1, '', style1)
-        table.write(i + 1, 2, datas[i]['title'], style1)
-        table.write(i + 1, 3, datas[i]['date'], style1)
-        table.write(i + 1, 4, datas[i]['notic_title'], style1)
-        table.write(i + 1, 5, datas[i]['notic_date'], style2 if (datas[i]['date_diff']) else style1)
-
-    # 注意：如果对同一个单元格重复操作，会引发overwrite Exception，想要取消该功能，需要在添加工作表时指定为可覆盖，像下面这样
-    # table=data.add_sheet('name',cell_overwrite_ok=True)
-    # 保存文件
-    data.save('公告年报不一致.xls')
-    # 这里只能保存扩展名为xls的，xlsx的格式不支持
-
-
 def read_excel(fund_code):
     x1 = xlrd.open_workbook('{}-{}.xls'.format(fund_code, version))
     # 2、获取sheet对象
@@ -298,87 +228,40 @@ def read_excel(fund_code):
     for i in range(1, nrows):
         row = sheet.row_values(i)
         # print('第%d行值' % i, row)
-        data = {'title': sheet.cell(i, 2).value, 'date': sheet.cell(i, 4).value, 'fund_code': fund_code}
+        data = {'title': sheet.cell(i, 2).value, 'date': sheet.cell(i, 4).value}
         # print(data)
         list.append(data)
     return list
 
 
-def string_similar(s1, s2):
-    return difflib.SequenceMatcher(lambda x: x in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], s1, s2).ratio()
-
-
-def compare_aaa(target_list, src_list):
+def compare_aaa(target_list, src_list, ):
     list = []
     for target_data in target_list:
         flag = False
-        date_diff = False
-        similar_ratio = float()
-        tmp_src_data = {}
         for src_data in src_list:
-
             if target_data['title'] == src_data['title'] and target_data['date'] == src_data['date']:
                 # print(target_data['title'], src_data['title'])
                 # print('存在' + str(target_data))
                 flag = True
                 break
-
-            # 相似度比较
-            # print('相似度:' + str(string_similar(target_data['date'], src_data['date'])))
-            _similar_ratio = string_similar(target_data['title'], src_data['title'])
-            if _similar_ratio > similar_ratio and _similar_ratio < 1.0 and _similar_ratio >= 0.9:
-                similar_ratio = _similar_ratio
-                tmp_src_data = src_data
-
-            # 披露时间不一致
-            if target_data['title'] == src_data['title'] and target_data['date'] != src_data['date']:
-                date_diff = True
-
         else:
             if flag is False:
-                print('不一致' + str(target_data))
-                data = target_data
-                if tmp_src_data == {}:
-                    data['notic_title'] = ''
-                    data['notic_date'] = ''
-                    data['date_diff'] = ''
-                else:
-                    print('不一致情况:' + str(similar_ratio))
-                    data['notic_title'] = tmp_src_data['title']
-                    data['notic_date'] = tmp_src_data['date']
-                    data['date_diff'] = date_diff
-                    data['similar_ratio'] = similar_ratio
-                list.append(data)
+                print('不存在' + str(target_data))
             continue
-
-    return list
 
 
 def check_fund(fund_code, fund_name):
-    # notice_list = get_fund_notice(fund_code, '1052')
-    # law_list = get_fund_notice(fund_code, '1053')
-    # get_fund_year_report(notice_list, fund_code)
-    # create_excel(fund_code, fund_name, notice_list + law_list)
+    notice_list = get_fund_notice(fund_code, '1052')
+    law_list = get_fund_notice(fund_code, '1053')
+    get_fund_year_report(notice_list, fund_code)
+    create_excel(fund_code, fund_name, notice_list + law_list)
     year_report_list = read_year_reports(fund_code)
     notice_list = read_excel(fund_code)
-    diff_list = compare_aaa(year_report_list, notice_list)
-    return diff_list
+    compare_aaa(year_report_list, notice_list)
 
 
 if __name__ == '__main__':
     # print(666)
     # version = int(time.time())
-    # print('当前版本号:', version)
-    version = '1577092778'
-    # check_fund('003749', '创金合信鑫收益A')
-
-    diff_list = []
-    fund_list = get_fund()
-    for fund in fund_list:
-        diff = check_fund(fund['fund_code'], fund['fund_name'])
-        diff_list.extend(diff)
-
-    print(diff_list)
-    create_diff_excel(diff_list)
-    # a = string_similar('创1金合信鑫收益灵活配置混合型证券投资基金招募说明书（更新）摘要（2017年第2号）', '创金合信鑫收益灵活配置混合型证券投资基金招募说明书（更新）摘要（2017年第2号）')
-    # print('sdsad:' + float(a))
+    version = '1577017576'
+    check_fund('003749', '创金合信鑫收益A')
