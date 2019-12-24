@@ -308,17 +308,18 @@ def create_diff_excel(datas):
         worksheet.write(i + 1, 5, datas[i]['notic_date'], red_format if (datas[i]['date_diff']) else default_format)
         segments = []
         for word in datas[i]['title_diff']:
-            segments.append(word[-1])
             if word.startswith("+"):
                 segments.append(green_format)
             elif word.startswith("-"):
                 segments.append(red_format)
             else:
                 segments.append(default_format)
+            segments.append(word[-1])
         if len(segments) == 0:
             worksheet.write_rich_string(i + 1, 6, '')
         else:
-            print(segments)
+            d = datas[i]['title_diff']
+            print(d)
             worksheet.write_rich_string(i + 1, 6, *segments)
 
     workbook.close()
@@ -329,18 +330,9 @@ def read_excel(fund_code):
     # 2、获取sheet对象
     sheet = x1.sheet_by_name(fund_code)  # 通过sheet名查找
     nrows = sheet.nrows
-    # print('表格总行数', nrows)
-    # ncols = sheet.ncols
-    # print('表格总列数', ncols)
-    # row3_values = sheet.row_values(2)
-    # print('第3行值', row3_values)
-    # col3_values = sheet.col_values(2)
-    # print('第3列值', col3_values)
-    # cell_3_3 = sheet.cell(2, 2).value
-    # print('第3行第3列的单元格的值：', cell_3_3)
     list = []
     for i in range(1, nrows):
-        row = sheet.row_values(i)
+        # row = sheet.row_values(i)
         # print('第%d行值' % i, row)
         data = {'title': sheet.cell(i, 2).value, 'date': sheet.cell(i, 4).value, 'fund_code': fund_code}
         # print(data)
@@ -363,8 +355,6 @@ def compare_aaa(target_list, src_list):
 
             # 一致
             if target_data['title'] == src_data['title'] and target_data['date'] == src_data['date']:
-                # print(target_data['title'], src_data['title'])
-                # print('存在' + str(target_data))
                 flag = True
                 break
 
@@ -381,7 +371,7 @@ def compare_aaa(target_list, src_list):
 
             # 相似度比较
             _similar_ratio = string_similar(target_data['title'], src_data['title'])
-            if _similar_ratio > similar_ratio and _similar_ratio < 1.0 and _similar_ratio >= 0.9:
+            if similar_ratio < _similar_ratio < 1.0 and _similar_ratio >= 0.9 and target_data['date'][:4] == src_data['date'][:4]:
                 similar_ratio = _similar_ratio
                 tmp_src_data = src_data
 
@@ -395,7 +385,7 @@ def compare_aaa(target_list, src_list):
                     data['date_diff'] = ''
                     data['title_diff'] = []
                 else:
-                    differences = list(difflib.Differ().compare(target_data['title'], src_data['title']))
+                    differences = list(difflib.Differ().compare(target_data['title'], tmp_src_data['title']))
                     print('不一致情况:', str(similar_ratio), "".join(differences))
 
                     data['title_diff'] = differences
@@ -432,7 +422,7 @@ def check_fund_2(fund_code):
 
 if __name__ == '__main__':
     # version = int(time.time())
-    version = '1577111612'
+    version = '1577092778'
     print('当前版本号:', version)
 
     diff_list = []
