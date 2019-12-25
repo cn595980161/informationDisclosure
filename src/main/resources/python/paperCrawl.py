@@ -1,17 +1,24 @@
+import os
+
+import pandas as pd
 import requests
+import xlsxwriter
 from lxml import etree
 from lxml import html
-import pandas as pd
-import xlsxwriter
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
 headers_zgzqb = {
-    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Encoding':'gzip, deflate',
-    'Accept-Language':'zh-CN,zh;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'zh-CN,zh;q=0.9',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+}
+
+headers_shzqb = {
+    'Cookie': 'PHPSESSID=2atnfohs45ffj9srpjh1ks82r3; cnstock_username=huangjt; cnstock_ss=8d4936c45cc14c5285e4de4c9782ff39; cnstock_record=1577248339761; CNSTOCK_SSO="ex=&BBS=huangjt|8nre%2FqPhNRE7ZWyLCstRog%3D%3D&SCHOOL=huangjt|0YHH23%2BFekW1KyR%2FXZoTyA%3D%3D&BLOG=huangjt|ADxtS1naKfss2d8j9eSkTQ%3D%3D&SHOP=huangjt|FuAGmrQxEamWm%2FszmUyy7w%3D%3D&ec="; CNSTOCK_BLOG=SUQ9MzM4NDk5Jk5BTUU9aHVhbmdqdCZFTUFJTD1XV3h6WWpVek5EUXpPRFl6TXpnelh6YzFQV1p4ZG5keVptNWhabkp3; CNSTOCK_PASSPORT="ex=&ID=338499&NAME=huangjt&EMAIL=WWxzYjUzNDQzODYzMzgzXzc1PWZxdndyZm5hZnJw&ec="; CNSTOCK_REALSSO=eWswWm9obDV6WC80YkhiSTlZYjNvZmptTlVwdlBqVEdqMlRjSXNuUEdtT096KzRQOGlMdzlqK3FIdDRmS004eCwzMzg0OTksaHVhbmdqdCxXV3h6WWpVek5EUXpPRFl6TXpnelh6YzFQV1p4ZG5keVptNWhabkp3LDE1NzcyNDgyNTMzNjI%3D;  ',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
@@ -28,6 +35,7 @@ def parse_zqrb(date):
     url = 'http://epaper.zqrb.cn/html/{}/{}/node_2.htm'.format(date[0:7], date[8:])
     r = requests.get(url, headers=headers)
     if r.status_code == 200:
+        save_html('证券日报电子报', date, r.content)
         html = etree.HTML(r.content.decode("utf-8"))
         # print(html)
         paper_list = html.xpath('//a[@class="vote_content12px"]')
@@ -55,6 +63,7 @@ def parse_zqsb(date):
     url = 'http://epaper.stcn.com/paper/zqsb/html/{}/{}/node_2.htm'.format(date[0:7], date[8:])
     r = requests.get(url, headers=headers)
     if r.status_code == 200:
+        save_html('证券时报电子报', date, r.content)
         if r.text.replace("\n", "") == '<script>window.location="/paper/zqsb/html/epaper/index/index.htm";</script>':
             print('页面重定向')
             return data_list
@@ -91,6 +100,7 @@ def parse_zgzqb(date):
     url = 'http://epaper.cs.com.cn/zgzqb/html/{}/{}/nbs.D110000zgzqb_A01.htm'.format(date[0:7], date[8:])
     r = requests.get(url, headers=headers_zgzqb)
     if r.status_code == 200:
+        save_html('中国证券报', date, r.content)
         _html = html.fromstring(r.content.decode("utf-8"))
         paper_list = _html.xpath('//tr[@class="default1"]//a')
         # print(paper_list)
@@ -101,6 +111,34 @@ def parse_zgzqb(date):
             title = paper.text_content()
             if search_key in title:
                 data = {'title': title, 'date': date, 'source': '中国证券报'}
+                # print(data)
+                data_list.append(data)
+    elif r.status_code == 404:
+        print('未找到页面')
+    else:
+        print('页面异常')
+    print(data_list)
+    return data_list
+
+
+# 上海证券报
+def parse_shzqb(date):
+    data_list = []
+    url = 'http://paper.cnstock.com/html/{}/{}/node_3.htm'.format(date[0:7], date[8:])
+    r = requests.get(url, headers=headers_shzqb)
+    if r.status_code == 200:
+        save_html('上海证券报', date, r.content)
+        # print(r.content.decode("utf-8"))
+        _html = html.fromstring(r.content.decode("ISO-8859-1"))
+        paper_list = _html.xpath('//div[@id="nlist"]//ul/li/a')
+        # print(paper_list)
+        if len(paper_list) == 0:
+            print('页面解析异常')
+        for paper in paper_list:
+            # print(paper.text_content())
+            title = paper.text_content()
+            if search_key in title:
+                data = {'title': title, 'date': date, 'source': '上海证券报'}
                 # print(data)
                 data_list.append(data)
     elif r.status_code == 404:
@@ -132,19 +170,29 @@ def create_excel(datas, name):
     workbook.close()
 
 
+def save_html(file_type, file_name, file_content):
+    if not os.path.exists(file_type):
+        os.makedirs(file_type)
+    with open(file_type + r'\\' + file_name + '.html', 'wb') as f:
+        f.write(file_content)
+
+
 if __name__ == '__main__':
     # parse_zqrb(None)
     zqrb_list = []
     zqsb_list = []
     zgzqb_list = []
+    shzqb_list = []
     dates = list(get_date('2014-7-1', '2017-4-30'))
     # dates = list(get_date('2014-9-11', '2014-9-11'))
     for date in dates:
         print(date)
-        # zqrb_list.extend(parse_zqrb(str(date)[0:10]))
+        zqrb_list.extend(parse_zqrb(str(date)[0:10]))
         # zqsb_list.extend(parse_zqsb(str(date)[0:10]))
-        zgzqb_list.extend(parse_zgzqb(str(date)[0:10]))
+        # zgzqb_list.extend(parse_zgzqb(str(date)[0:10]))
+        # shzqb_list.extend(parse_shzqb(str(date)[0:10]))
 
-    # create_excel(zqrb_list, '证券日报电子报')
-    # create_excel(zqsb_list, '证券时报电子报')
-    create_excel(zgzqb_list, '中国证券报')
+        create_excel(zqrb_list, '证券日报电子报')
+        # create_excel(zqsb_list, '证券时报电子报')
+        # create_excel(zgzqb_list, '中国证券报')
+        # create_excel(shzqb_list, '上海证券报')
