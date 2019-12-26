@@ -10,6 +10,7 @@ import xlsxwriter
 from docx import Document
 from lxml import etree
 from win32com import client as wc
+from tqdm import tqdm
 
 # import textract
 
@@ -20,6 +21,8 @@ domain = 'http://www.cjhxfund.com'
 version = ''
 
 year_report_path = r'.\year_report'
+
+notice_path = r'.\notice'
 
 headers = {
     'Content-Length': '83',
@@ -48,8 +51,8 @@ def crawl_notice(fund_code, catalogId, numPerPage):
     body = 'funcNo=904001&catalogId={}&numPerPage={}&isPage=Y&curpage=1&state=3&fundid=' + fund_code
     # body = funcNo=904001&catalogId=1053&numPerPage=10&isPage=Y&curpage=1&state=3&fundid=001662
     r = requests.post(url, data=body.format(catalogId, numPerPage), headers=headers)
-    print(r.status_code)
-    print(r.text)
+    # print(r.status_code)
+    # print(r.text)
     if r.status_code == 200:
         return json.loads(r.text)
     else:
@@ -58,14 +61,14 @@ def crawl_notice(fund_code, catalogId, numPerPage):
 
 # 获取公告
 def get_fund_notice(fund_code, catalogId):
-    print(fund_code)
+    # print(fund_code)
     result = crawl_notice(fund_code, catalogId, '1')
-    print(result['error_no'])
+    # print(result['error_no'])
     if result['error_no'] == '0':
         totalRows = result['results'][0]['totalRows']
-        print(totalRows)
+        # print(totalRows)
         result = crawl_notice(fund_code, catalogId, totalRows)
-        print(result['results'][0]['data'])
+        # print(result['results'][0]['data'])
         return result['results'][0]['data']
     else:
         print('未查询到数据')
@@ -77,7 +80,7 @@ def get_fund_year_report(notice_list, fund_code):
     for notice in notice_list:
         # if notice['title'].find('年年度报告') >= 0:
         if notice['title'].endswith('年年度报告'):
-            print(notice)
+            # print(notice)
             download(domain + notice['link_url'], notice['title'], fund_code)
 
 
@@ -277,7 +280,10 @@ def create_excel(fund_code, fund_name, datas):
     # 注意：如果对同一个单元格重复操作，会引发overwrite Exception，想要取消该功能，需要在添加工作表时指定为可覆盖，像下面这样
     # table=data.add_sheet('name',cell_overwrite_ok=True)
     # 保存文件
-    data.save('{}-{}.xls'.format(fund_code, version))
+    root_path = os.path.join(notice_path, str(version))
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
+    data.save(root_path + '\\' + fund_code + '.xls')
     # 这里只能保存扩展名为xls的，xlsx的格式不支持
 
 
@@ -326,7 +332,7 @@ def create_diff_excel(datas):
 
 
 def read_excel(fund_code):
-    x1 = xlrd.open_workbook('{}-{}.xls'.format(fund_code, version))
+    x1 = xlrd.open_workbook(notice_path + '\{}\{}.xls'.format(version, fund_code))
     # 2、获取sheet对象
     sheet = x1.sheet_by_name(fund_code)  # 通过sheet名查找
     nrows = sheet.nrows
@@ -421,20 +427,25 @@ def check_fund_2(fund_code):
 
 
 if __name__ == '__main__':
-    # version = int(time.time())
-    version = '1577092778'
+    version = int(time.time())
+    # version = '1577092778'
     print('当前版本号:', version)
 
     diff_list = []
     fund_list = get_fund()
-    # for fund in fund_list:
-    #     check_fund_1(fund['fund_code'], fund['fund_name'])
 
-    # doc_to_docx_all()
+    pbar = tqdm(fund_list)
+    for fund in pbar:
+        check_fund_1(fund['fund_code'], fund['fund_name'])
+        pbar.set_description("进度 %s" % fund)
 
-    for fund in fund_list:
+    doc_to_docx_all()
+
+    pbar = tqdm(fund_list)
+    for fund in pbar:
         diff = check_fund_2(fund['fund_code'])
         diff_list.extend(diff)
+        pbar.set_description("进度 %s" % fund)
 
     print(diff_list)
     create_diff_excel(diff_list)

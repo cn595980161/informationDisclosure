@@ -5,6 +5,7 @@ import requests
 import xlsxwriter
 from lxml import etree
 from lxml import html
+from tqdm import tqdm
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
@@ -22,9 +23,9 @@ headers_shzqb = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
-paper_path = r'E:\securities_paper'
+paper_path = r'D:\securities_paper'
 
-search_key = '创金'
+search_key = '创金合信'
 
 
 def get_date(start, end):
@@ -59,7 +60,7 @@ def parse_zqrb(date, content):
     title = html.xpath('//title')[0].text
     # print(title)
     if title == '404 Not Found':
-        print('页面不存在')
+        # print('页面不存在')
         return []
     paper_list = html.xpath('//a[@class="vote_content12px"]')
     # print(paper_list)
@@ -102,10 +103,10 @@ def zqsb(date):
 def parse_zqsb(date, content):
     data_list = []
     if len(content) <= 1:
-        print('页面为空')
+        # print('页面为空')
         return []
     if content.replace("\n", "") == '<script>window.location="/paper/zqsb/html/epaper/index/index.htm";</script>':
-        print('页面不存在')
+        # print('页面不存在')
         return []
 
     # print(r.content.decode("utf-8"))
@@ -163,9 +164,9 @@ def parse_zgzqb(date, content):
     data_list = []
     _html = html.fromstring(content)
     title = _html.xpath('//title')[0].text
-    print(title)
+    # print(title)
     if title == '提示':
-        print('页面不存在')
+        # print('页面不存在')
         return []
 
     paper_list = _html.xpath('//tr[@class="default1"]//a')
@@ -211,7 +212,7 @@ def parse_shzqb(date, content):
     title = _html.xpath('//title')[0].text
     # print(title)
     if title == '对不起，页面不存在了，请选择其它页面访问。':
-        print('页面不存在')
+        # print('页面不存在')
         return []
     paper_list = _html.xpath('//div[@id="nlist"]//ul/li/a')
     # print(paper_list)
@@ -259,6 +260,25 @@ def save_html(file_type, file_name, file_content, encoding):
         f.write(file_content)
 
 
+def savefile(file_name, list):
+    """
+    把文件存成csv格式的文件，header 写出列名，index写入行名称
+    :param list: 要存储的一条列表数据
+    :return:
+    """
+    df = pd.DataFrame(data=list)
+    df.to_csv(file_name + '.csv', encoding="utf-8-sig", mode="a", header=False, index=False)
+
+
+def save_csv(file_name, list):
+    """
+    一次性存储完
+    :return:
+    """
+    pf = pd.DataFrame(data=list)
+    pf.to_csv(file_name + '.csv', encoding="utf-8-sig", header=False, index=False)
+
+
 def crawl_paper(start, end):
     zqrb_list = []
     zqsb_list = []
@@ -287,14 +307,21 @@ if __name__ == '__main__':
     shzqb_list = []
     dates = list(get_date('2014-7-1', '2019-12-26'))
     # dates = list(get_date('2017-11-12', '2017-11-12'))
-    for date in dates:
-        print(date)
+    pbar = tqdm(dates)
+    for date in pbar:
+        # print(date)
         zqrb_list.extend(zqrb(str(date)[0:10]))
-        # zqsb_list.extend(zqsb(str(date)[0:10]))
-        # zgzqb_list.extend(zgzqb(str(date)[0:10]))
-        # shzqb_list.extend(shzqb(str(date)[0:10]))
+        zqsb_list.extend(zqsb(str(date)[0:10]))
+        zgzqb_list.extend(zgzqb(str(date)[0:10]))
+        shzqb_list.extend(shzqb(str(date)[0:10]))
 
-        # create_excel(zqrb_list, '证券日报电子报')
-        # create_excel(zqsb_list, '证券时报电子报')
-        # create_excel(zgzqb_list, '中国证券报')
-        # create_excel(shzqb_list, '上海证券报')
+        pbar.set_description("进度 %s" % str(date)[0:10])
+
+    save_csv('paper\证券日报电子报', zqrb_list)
+    save_csv('paper\证券时报电子报', zqsb_list)
+    save_csv('paper\中国证券报', zgzqb_list)
+    save_csv('paper\上海证券报', shzqb_list)
+    # create_excel(zqrb_list, '证券日报电子报')
+    # create_excel(zqsb_list, '证券时报电子报')
+    # create_excel(zgzqb_list, '中国证券报')
+    # create_excel(shzqb_list, '上海证券报')
