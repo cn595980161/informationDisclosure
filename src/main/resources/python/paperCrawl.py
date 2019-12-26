@@ -22,6 +22,8 @@ headers_shzqb = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
+paper_path = r'E:\securities_paper'
+
 search_key = '创金'
 
 
@@ -31,14 +33,14 @@ def get_date(start, end):
 
 # 证券日报电子报
 def zqrb(date):
-    path = os.path.join('证券日报电子报', date + '.html')
+    path = os.path.join(paper_path, '证券日报电子报', date + '.html')
     if os.path.exists(path):
         with open(path, 'r', encoding='UTF-8') as f:
             return parse_zqrb(date, f.read())
     else:
         url = 'http://epaper.zqrb.cn/html/{}/{}/node_2.htm'.format(date[0:7], date[8:])
         r = requests.get(url, headers=headers)
-        save_html('证券日报电子报', date, r.content)
+        save_html('证券日报电子报', date, r.content, 'UTF-8')
         if r.status_code == 200:
             return parse_zqrb(date, r.content.decode("utf-8"))
         elif r.status_code == 404:
@@ -54,6 +56,11 @@ def parse_zqrb(date, content):
     data_list = []
     html = etree.HTML(content)
     # print(html)
+    title = html.xpath('//title')[0].text
+    # print(title)
+    if title == '404 Not Found':
+        print('页面不存在')
+        return []
     paper_list = html.xpath('//a[@class="vote_content12px"]')
     # print(paper_list)
     if len(paper_list) == 0:
@@ -67,22 +74,22 @@ def parse_zqrb(date, content):
             # print(data)
             data_list.append(data)
 
-    print(data_list)
+    # print(data_list)
     return data_list
 
 
 # 证券时报电子报
 def zqsb(date):
-    path = os.path.join('证券时报电子报', date + '.html')
+    path = os.path.join(paper_path, '证券时报电子报', date + '.html')
     if os.path.exists(path):
         with open(path, 'r', encoding='UTF-8') as f:
             return parse_zqsb(date, f.read())
     else:
         url = 'http://epaper.stcn.com/paper/zqsb/html/{}/{}/node_2.htm'.format(date[0:7], date[8:])
         r = requests.get(url, headers=headers)
-        save_html('证券时报电子报', date, r.content)
+        save_html('证券时报电子报', date, r.content, 'UTF-8')
         if r.status_code == 200:
-            return parse_zqsb(date, r.content.decode("ISO-8859-1"))
+            return parse_zqsb(date, r.content.decode("utf-8"))
         elif r.status_code == 404:
             print('未找到页面')
             return []
@@ -94,17 +101,23 @@ def zqsb(date):
 # 证券时报电子报
 def parse_zqsb(date, content):
     data_list = []
+    if len(content) <= 1:
+        print('页面为空')
+        return []
     if content.replace("\n", "") == '<script>window.location="/paper/zqsb/html/epaper/index/index.htm";</script>':
-        print('页面重定向')
+        print('页面不存在')
         return []
 
     # print(r.content.decode("utf-8"))
     _html = html.fromstring(content)
+
+    # title = _html.xpath('//title')[0].text
+    # print(title)
     # print(html)
     # 2015/11/30
-    if date < '2015/11/30':
-        paper_list = _html.xpath('//div[@id="listWrap"]/div/ul/li/a')
-    else:
+    # if date < '2015-11-30':
+    paper_list = _html.xpath('//div[@id="listWrap"]/div/ul/li/a')
+    if len(paper_list) == 0:
         paper_list = _html.xpath('//div[@id="webtree"]/dl/dd/ul/li/a')
     # print(paper_list)
     if len(paper_list) == 0:
@@ -118,23 +131,23 @@ def parse_zqsb(date, content):
             # print(data)
             data_list.append(data)
 
-    print(data_list)
+    # print(data_list)
     return data_list
 
 
 # 中国证券报
 def zgzqb(date):
-    path = os.path.join('中国证券报', date + '.html')
+    path = os.path.join(paper_path, '中国证券报', date + '.html')
     if os.path.exists(path):
         with open(path, 'r', encoding='UTF-8') as f:
             return parse_zgzqb(date, f.read())
     else:
-        if date < '2018-02-06' or date >'2018-03-28':
+        if date < '2018-02-06' or date > '2018-03-28':
             url = 'http://epaper.cs.com.cn/zgzqb/html/{}/{}/nbs.D110000zgzqb_A01.htm'.format(date[0:7], date[8:])
         else:
             url = 'http://epaper.cs.com.cn/zgzqb/html/{}/{}/nbs.D110000zgzqb_A02.htm'.format(date[0:7], date[8:])
         r = requests.get(url, headers=headers_zgzqb)
-        save_html('中国证券报', date, r.content)
+        save_html('中国证券报', date, r.content, 'UTF-8')
         if r.status_code == 200:
             return parse_zgzqb(date, r.content.decode("utf-8"))
         elif r.status_code == 404:
@@ -149,6 +162,12 @@ def zgzqb(date):
 def parse_zgzqb(date, content):
     data_list = []
     _html = html.fromstring(content)
+    title = _html.xpath('//title')[0].text
+    print(title)
+    if title == '提示':
+        print('页面不存在')
+        return []
+
     paper_list = _html.xpath('//tr[@class="default1"]//a')
     # print(paper_list)
     if len(paper_list) == 0:
@@ -161,22 +180,22 @@ def parse_zgzqb(date, content):
             data = {'title': title, 'date': date, 'source': '中国证券报'}
             # print(data)
             data_list.append(data)
-    print(data_list)
+    # print(data_list)
     return data_list
 
 
 # 上海证券报
 def shzqb(date):
-    path = os.path.join('上海证券报', date + '.html')
+    path = os.path.join(paper_path, '上海证券报', date + '.html')
     if os.path.exists(path):
-        with open(path, 'r', encoding='ISO-8859-1') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             return parse_shzqb(date, f.read())
     else:
         url = 'http://paper.cnstock.com/html/{}/{}/node_3.htm'.format(date[0:7], date[8:])
         r = requests.get(url, headers=headers_shzqb)
-        save_html('上海证券报', date, r.content)
+        save_html('上海证券报', date, r.content.decode(r.apparent_encoding).encode("utf-8"), 'GB2312')
         if r.status_code == 200:
-            return parse_shzqb(date, r.content.decode("ISO-8859-1"))
+            return parse_shzqb(date, r.content.decode(r.apparent_encoding))
         elif r.status_code == 404:
             print('未找到页面')
             return []
@@ -189,6 +208,11 @@ def shzqb(date):
 def parse_shzqb(date, content):
     data_list = []
     _html = html.fromstring(content)
+    title = _html.xpath('//title')[0].text
+    # print(title)
+    if title == '对不起，页面不存在了，请选择其它页面访问。':
+        print('页面不存在')
+        return []
     paper_list = _html.xpath('//div[@id="nlist"]//ul/li/a')
     # print(paper_list)
     if len(paper_list) == 0:
@@ -201,7 +225,7 @@ def parse_shzqb(date, content):
             data = {'title': title, 'date': date, 'source': '上海证券报'}
             # print(data)
             data_list.append(data)
-    print(data_list)
+    # print(data_list)
     return data_list
 
 
@@ -226,11 +250,33 @@ def create_excel(datas, name):
     workbook.close()
 
 
-def save_html(file_type, file_name, file_content):
-    if not os.path.exists(file_type):
-        os.makedirs(file_type)
-    with open(file_type + r'\\' + file_name + '.html', 'wb') as f:
+def save_html(file_type, file_name, file_content, encoding):
+    root_path = os.path.join(paper_path, file_type)
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
+    file_path = os.path.join(root_path, file_name + '.html')
+    with open(file_path, 'wb') as f:
         f.write(file_content)
+
+
+def crawl_paper(start, end):
+    zqrb_list = []
+    zqsb_list = []
+    zgzqb_list = []
+    shzqb_list = []
+    dates = list(get_date(start, end))
+    # dates = list(get_date('2017-11-12', '2017-11-12'))
+    for date in dates:
+        print(date)
+        zqrb_list.extend(zqrb(str(date)[0:10]))
+        # zqsb_list.extend(zqsb(str(date)[0:10]))
+        # zgzqb_list.extend(zgzqb(str(date)[0:10]))
+        # shzqb_list.extend(shzqb(str(date)[0:10]))
+
+        # create_excel(zqrb_list, '证券日报电子报')
+        # create_excel(zqsb_list, '证券时报电子报')
+        # create_excel(zgzqb_list, '中国证券报')
+        # create_excel(shzqb_list, '上海证券报')
 
 
 if __name__ == '__main__':
@@ -239,16 +285,16 @@ if __name__ == '__main__':
     zqsb_list = []
     zgzqb_list = []
     shzqb_list = []
-    dates = list(get_date('2018-12-24', '2019-12-25'))
-    # dates = list(get_date('2014-9-11', '2014-9-11'))
+    dates = list(get_date('2014-7-1', '2019-12-26'))
+    # dates = list(get_date('2017-11-12', '2017-11-12'))
     for date in dates:
         print(date)
         zqrb_list.extend(zqrb(str(date)[0:10]))
-        zqsb_list.extend(zqsb(str(date)[0:10]))
-        zgzqb_list.extend(zgzqb(str(date)[0:10]))
-        shzqb_list.extend(shzqb(str(date)[0:10]))
+        # zqsb_list.extend(zqsb(str(date)[0:10]))
+        # zgzqb_list.extend(zgzqb(str(date)[0:10]))
+        # shzqb_list.extend(shzqb(str(date)[0:10]))
 
-        create_excel(zqrb_list, '证券日报电子报')
-        create_excel(zqsb_list, '证券时报电子报')
-        create_excel(zgzqb_list, '中国证券报')
-        create_excel(shzqb_list, '上海证券报')
+        # create_excel(zqrb_list, '证券日报电子报')
+        # create_excel(zqsb_list, '证券时报电子报')
+        # create_excel(zgzqb_list, '中国证券报')
+        # create_excel(shzqb_list, '上海证券报')
