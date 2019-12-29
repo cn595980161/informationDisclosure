@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>开始使用layui</title>
+    <link rel="stylesheet" href="../plugins/layui/css/layui.css">
+</head>
+<body>
+
+<!--<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">-->
+<!--<legend>標題</legend>-->
+<!--</fieldset>-->
+
+<div class="layui-tab">
+    <ul class="layui-tab-title">
+        <li class="layui-this">网站设置</li>
+        <li>用户管理</li>
+        <li>权限分配</li>
+        <li>商品管理</li>
+        <li>日报管理</li>
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+            1. 高度默认自适应，也可以随意固宽。
+            <br>2. Tab进行了响应式处理，所以无需担心数量多少。
+        </div>
+        <div class="layui-tab-item">内容2</div>
+        <div class="layui-tab-item">内容3</div>
+        <div class="layui-tab-item">内容4</div>
+        <div class="layui-tab-item">内容5</div>
+    </div>
+</div>
+
+<script src="../plugins/layui/layui.js"></script>
+<script>
+    layui.use(['layer', 'form', 'element'], function () {
+        var layer = layui.layer
+            , form = layui.form
+            , element = layui.element;
+
+        element.on('nav(menu)', function (elem) {
+            console.log(elem); //得到当前点击的DOM对象
+            layer.msg(elem.text());
+        });
+
+        // layer.msg('Hello World');
+    });
+</script>
+</body>
+</html>

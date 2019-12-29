@@ -322,7 +322,7 @@ def create_diff_excel(datas):
                 segments.append(default_format)
             segments.append(word[-1])
         if len(segments) == 0:
-            worksheet.write_rich_string(i + 1, 6, '')
+            worksheet.write(i + 1, 6, '')
         else:
             d = datas[i]['title_diff']
             print(d)
@@ -352,21 +352,35 @@ def string_similar(s1, s2):
 
 def compare_aaa(target_list, src_list):
     _list = []
+    # 1. 过滤存在的信息
+    # 临时列表
+    _target_list = target_list[:]
+    for target_data in _target_list:
+        # 临时列表
+        _src_list = src_list[:]
+        for src_data in _src_list:
+            # 一致
+            if target_data['title'] == src_data['title'] and target_data['date'] == src_data['date']:
+                # flag = True
+                print('一致', target_data)
+                target_list.remove(target_data)
+                src_list.remove(src_data)
+                break
+        else:
+            continue
+
+    # 2.找出不存在的信息
     for target_data in target_list:
-        flag = False
         date_diff = False
         similar_ratio = float()
         tmp_src_data = {}
-        for src_data in src_list:
 
-            # 一致
-            if target_data['title'] == src_data['title'] and target_data['date'] == src_data['date']:
-                flag = True
-                break
+        # 过滤不存在的
+        for src_data in src_list:
 
             # 披露时间不一致
             if target_data['title'] == src_data['title'] and target_data['date'][:4] == src_data['date'][:4] and target_data['date'][5:] != src_data['date'][5:]:
-                print('披露时间不一致情况:')
+                print('披露时间不一致情况:', target_data, src_data)
                 data = target_data
                 data['notic_title'] = src_data['title']
                 data['notic_date'] = src_data['date']
@@ -377,29 +391,31 @@ def compare_aaa(target_list, src_list):
 
             # 相似度比较
             _similar_ratio = string_similar(target_data['title'], src_data['title'])
-            if similar_ratio < _similar_ratio < 1.0 and _similar_ratio >= 0.9 and target_data['date'][:4] == src_data['date'][:4]:
+            if (_similar_ratio > similar_ratio) and (_similar_ratio < 1.0) and (_similar_ratio >= 0.7) and target_data['date'][:4] == src_data['date'][:4]:
                 similar_ratio = _similar_ratio
                 tmp_src_data = src_data
 
         else:
-            if flag is False:
-                print('不一致' + str(target_data))
-                data = target_data
-                if tmp_src_data == {}:
-                    data['notic_title'] = ''
-                    data['notic_date'] = ''
-                    data['date_diff'] = ''
-                    data['title_diff'] = []
-                else:
-                    differences = list(difflib.Differ().compare(target_data['title'], tmp_src_data['title']))
-                    print('不一致情况:', str(similar_ratio), "".join(differences))
+            print('不一致' + str(target_data))
+            data = target_data
 
-                    data['title_diff'] = differences
-                    data['notic_title'] = tmp_src_data['title']
-                    data['notic_date'] = tmp_src_data['date']
-                    data['date_diff'] = date_diff
-                    data['similar_ratio'] = similar_ratio
-                _list.append(data)
+            if tmp_src_data == {}:
+                data['title_diff'] = []
+                data['notic_title'] = ''
+                data['notic_date'] = ''
+                data['date_diff'] = date_diff
+                data['similar_ratio'] = 0
+            else:
+                differences = list(difflib.Differ().compare(target_data['title'], tmp_src_data['title']))
+                print('不一致情况:', str(similar_ratio), "".join(differences))
+
+                data['title_diff'] = differences
+                data['notic_title'] = tmp_src_data['title']
+                data['notic_date'] = tmp_src_data['date']
+                data['date_diff'] = date_diff
+                data['similar_ratio'] = similar_ratio
+
+            _list.append(data)
             continue
 
     return _list
@@ -416,7 +432,7 @@ def check_fund_1(fund_code, fund_name):
     create_excel(fund_code, fund_name, notice_list + law_list)
 
 
-def check_fund_2(fund_code):
+def check_fund_2(fund_code, fund_name):
     # 读取年报列表
     year_report_list = read_year_reports(fund_code)
     # 读取公告列表
@@ -427,19 +443,19 @@ def check_fund_2(fund_code):
 
 
 if __name__ == '__main__':
-    version = int(time.time())
-    # version = '1577092778'
+    # version = int(time.time())
+    version = '1577368698'
     print('当前版本号:', version)
 
     diff_list = []
     fund_list = get_fund()
 
     pbar = tqdm(fund_list)
-    for fund in pbar:
-        check_fund_1(fund['fund_code'], fund['fund_name'])
-        pbar.set_description("进度 %s" % fund)
-
-    doc_to_docx_all()
+    # for fund in pbar:
+    #     check_fund_1(fund['fund_code'], fund['fund_name'])
+    #     pbar.set_description("进度 %s" % fund)
+    #
+    # doc_to_docx_all()
 
     pbar = tqdm(fund_list)
     for fund in pbar:
@@ -453,3 +469,6 @@ if __name__ == '__main__':
     # print('sdsad:' + float(a))
 
     # print('2018-01-01'[0:4])
+
+    # diff_list = check_fund_2('001662')
+    # create_diff_excel(diff_list)
