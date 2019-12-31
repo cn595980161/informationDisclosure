@@ -1,9 +1,10 @@
 import os
+import re
 
 import pandas as pd
 import requests
+import time
 import xlsxwriter
-from lxml import etree
 from lxml import html
 from tqdm import tqdm
 
@@ -23,9 +24,18 @@ headers_shzqb = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
-paper_path = r'D:\securities_paper'
+paper_path = r'E:\securities_paper'
 
 search_key = '创金合信'
+
+
+def time_me(fn):
+    def _wrapper(*args, **kwargs):
+        start = time.process_time()
+        fn(*args, **kwargs)
+        print("%s cost %s second" % (fn.__name__, time.process_time() - start))
+
+    return _wrapper
 
 
 def get_date(start, end):
@@ -55,22 +65,25 @@ def zqrb(date):
 # 证券日报电子报
 def parse_zqrb(date, content):
     data_list = []
-    html = etree.HTML(content)
+    _html = html.fromstring(content)
     # print(html)
-    title = html.xpath('//title')[0].text
+    title = _html.xpath('//title')[0].text
     # print(title)
     if title == '404 Not Found':
         # print('页面不存在')
         return []
-    paper_list = html.xpath('//a[@class="vote_content12px"]')
+    paper_list = _html.xpath('//a[@class="vote_content12px"]')
     # print(paper_list)
     if len(paper_list) == 0:
         print('页面解析异常')
         return []
     for paper in paper_list:
         # print(paper.text)
-        title = paper.text
+        title = paper.text_content().strip()
         if search_key in title:
+            # 去除
+            title = re.sub('[（|(]下转.*版[）|)]', '', title)
+            title = re.sub('[（|(]上接.*版[）|)]', '', title)
             data = {'title': title, 'date': date, 'source': '证券日报电子报'}
             # print(data)
             data_list.append(data)
@@ -126,7 +139,7 @@ def parse_zqsb(date, content):
         return []
     for paper in paper_list:
         # print(paper.text)
-        title = paper.text_content()
+        title = paper.text_content().strip()
         if search_key in title:
             data = {'title': title, 'date': date, 'source': '证券时报电子报'}
             # print(data)
@@ -176,7 +189,7 @@ def parse_zgzqb(date, content):
         return []
     for paper in paper_list:
         # print(paper.text)
-        title = paper.text_content()
+        title = paper.text_content().strip()
         if search_key in title:
             data = {'title': title, 'date': date, 'source': '中国证券报'}
             # print(data)
@@ -221,7 +234,7 @@ def parse_shzqb(date, content):
         return []
     for paper in paper_list:
         # print(paper.text_content())
-        title = paper.text_content()
+        title = paper.text_content().strip()
         if search_key in title:
             data = {'title': title, 'date': date, 'source': '上海证券报'}
             # print(data)
@@ -260,13 +273,13 @@ def save_html(file_type, file_name, file_content, encoding):
         f.write(file_content)
 
 
-def savefile(file_name, list):
+def save_file(file_name, data):
     """
     把文件存成csv格式的文件，header 写出列名，index写入行名称
     :param list: 要存储的一条列表数据
     :return:
     """
-    df = pd.DataFrame(data=list)
+    df = pd.DataFrame(data=[data])
     df.to_csv(file_name + '.csv', encoding="utf-8-sig", mode="a", header=False, index=False)
 
 
@@ -301,6 +314,7 @@ def crawl_paper(start, end):
 
 if __name__ == '__main__':
     # parse_zqrb(None)
+    paper_list = []
     zqrb_list = []
     zqsb_list = []
     zgzqb_list = []
@@ -310,18 +324,50 @@ if __name__ == '__main__':
     pbar = tqdm(dates)
     for date in pbar:
         # print(date)
-        zqrb_list.extend(zqrb(str(date)[0:10]))
-        zqsb_list.extend(zqsb(str(date)[0:10]))
-        zgzqb_list.extend(zgzqb(str(date)[0:10]))
-        shzqb_list.extend(shzqb(str(date)[0:10]))
+        _list1 = zqrb(str(date)[0:10])
+        zqrb_list.extend(_list1)
+        _list2 = zqsb(str(date)[0:10])
+        zqsb_list.extend(_list2)
+        _list3 = zgzqb(str(date)[0:10])
+        zgzqb_list.extend(_list3)
+        _list4 = shzqb(str(date)[0:10])
+        shzqb_list.extend(_list4)
+
+        _list = _list1 + _list2 + _list3 + _list4
+        if len(_list) > 0:
+            # paper_list.append({'date': date, 'data': _list})
+            paper_list.extend(_list)
 
         pbar.set_description("进度 %s" % str(date)[0:10])
 
-    save_csv('paper\证券日报电子报', zqrb_list)
-    save_csv('paper\证券时报电子报', zqsb_list)
-    save_csv('paper\中国证券报', zgzqb_list)
-    save_csv('paper\上海证券报', shzqb_list)
+    # save_csv('paper\证券日报电子报', zqrb_list)
+    # save_csv('paper\证券时报电子报', zqsb_list)
+    # save_csv('paper\中国证券报', zgzqb_list)
+    # save_csv('paper\上海证券报', shzqb_list)
+
     # create_excel(zqrb_list, '证券日报电子报')
     # create_excel(zqsb_list, '证券时报电子报')
     # create_excel(zgzqb_list, '中国证券报')
     # create_excel(shzqb_list, '上海证券报')
+
+    # pbar = tqdm(paper_list)
+    # for paper in pbar:
+    #     save_file('haha', paper)
+    # pbar.set_description("进度 %s" % paper)
+
+    df = pd.DataFrame(data=paper_list)
+    print(df.count())
+    # 去重
+    df = df.drop_duplicates()
+    print(df.count())
+    for ir in df.itertuples():
+        print(ir[1], ir[2], ir[3])
+    g = df.groupby(['date', 'title']).apply(lambda x: ','.join(x['source'])).reset_index()
+    print('----------------------------------')
+
+    # sum_result = g.sum().reset_index()
+    #
+    for ir in g.itertuples():
+        print(ir[1], ir[2], ir[3])
+
+    g.to_csv('喵喵喵' + '.csv', encoding="utf-8-sig", header=False, index=False)

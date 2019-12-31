@@ -1,4 +1,10 @@
+import os
+import re
+from shutil import copy
+
 import pandas as pd
+
+report_path = r'E:\info_report'
 
 
 def auto_fill_merge_cell(df):
@@ -11,28 +17,51 @@ def auto_fill_merge_cell(df):
     df[cols] = df[cols].ffill()
 
 
-def in_str(v, s):
-    for a in v:
-        if a in s:
-            return True
-    return False
+def match_str(v, s):
+    # reg = ''
+    for reg in v:
+        if reg.endswith('+'):
+            reg = reg[:-1]
+            if not re.search(reg, s):
+                return False
+        elif reg.endswith('-'):
+            reg = reg[:-1]
+            if re.search(reg, s):
+                return False
+        elif reg == '无':
+            return False
+    return True
 
 
-notic_data = pd.read_excel(r'D:\项目\informationDisclosure\src\main\resources\python\notice\1577368698\001199.xls', sheet_name='001199')
-# for row in range(0, notic_data.shape[0]):
-#     print(notic_data.iloc[row][2])
+def save_file(rule, data):
+    root_path = os.path.join(report_path, str(data['年度']), str(rule[0]), str(rule[1]))
+    # 不存在创建
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
 
-rule_data = pd.read_excel(r'C:\Users\Administrator\Desktop\信批文件分类规则.xlsx', sheet_name='分门别类规则')
-auto_fill_merge_cell(rule_data)
-# print(rule_data)
-for row in range(0, rule_data.shape[0]):
-    # 取每一行的2-66列数据，注意下面这个取法最后是带列头的字典形式
-    # print(rule_data.iloc[row][2])
-    rule = rule_data.iloc[row][2].split(',')
-    # print(rule)
-    for row1 in range(0, notic_data.shape[0]):
-        # print(notic_data.iloc[row1][2])
-        title = notic_data.iloc[row1][2]
-        if in_str(rule, title):
-            print(666)
-            print(title)
+    print(os.getcwd())
+    file_path = os.path.join(os.getcwd(), 'year_report', '1577779898', str(data['基金代码']))
+    copy(file_path + '\\' + data['公告文件名'], root_path)
+    # 复制文件
+
+
+if __name__ == '__main__':
+    # print(re.search('招募说明书+更新+', '创金合信沪港深研究精选灵活配置混合型证券投资基金招募说明书（更新）摘要（2019年第2号）'))
+    notic_data = pd.read_excel(r'E:\项目\informationDisclosure\src\main\resources\python\notice\1577785207\001662.xls', sheet_name='001662', converters={u'基金代码': str})
+    # for row in range(0, notic_data.shape[0]):
+    #     print(notic_data.iloc[row][2])
+
+    rule_data = pd.read_excel(r'C:\Users\Administrator\Desktop\信批文件分类规则.xlsx', sheet_name='分门别类规则')
+    auto_fill_merge_cell(rule_data)
+    # print(rule_data)
+    for row in range(0, rule_data.shape[0]):
+        # print(rule_data.iloc[row][2])
+        rule = rule_data.iloc[row][2].split(',')
+        # print(rule)
+        for row1 in range(0, notic_data.shape[0]):
+            # print(notic_data.iloc[row1][2])
+            title = notic_data.iloc[row1][2]
+            if match_str(rule, title):
+                print(rule_data.iloc[row])
+                print(title)
+                save_file(rule_data.iloc[row], notic_data.iloc[row1])

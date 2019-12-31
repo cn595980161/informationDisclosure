@@ -3,6 +3,7 @@ import json
 import os
 
 import requests
+import time
 import xlrd
 import xlsxwriter
 import xlwt
@@ -68,7 +69,13 @@ def get_fund_notice(fund_code, catalogId):
         # print(totalRows)
         result = crawl_notice(fund_code, catalogId, totalRows)
         # print(result['results'][0]['data'])
-        return result['results'][0]['data']
+        data = result['results'][0]['data']
+
+        # 下载文件
+        # for notice in data:
+        #     download_notice(domain + notice['link_url'], notice['title'], fund_code)
+
+        return data
     else:
         print('未查询到数据')
         return None
@@ -93,10 +100,16 @@ def download(url, fileName, fund_code):
     with open(path, "wb") as f:
         f.write(res.content)
 
-    # # doc转docx
-    # if os.path.splitext(path)[1] == '.doc':
-    #     # 转换格式
-    #     doc_to_docx(path)
+
+# 下载文件
+def download_notice(url, fileName, fund_code):
+    res = requests.get(url)
+    root_path = os.path.join(notice_path, version, fund_code)
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
+    file_path = root_path + r'\{}.{}'.format(fileName, url.split('.')[-1])
+    with open(file_path, "wb") as f:
+        f.write(res.content)
 
 
 # 将 .doc 文件转成 .docx
@@ -274,7 +287,7 @@ def create_excel(fund_code, fund_name, datas):
         table.write(i + 1, 2, datas[i]['title'], style1)
         table.write(i + 1, 3, datas[i]['short_date'].split('-')[0], style1)
         table.write(i + 1, 4, datas[i]['short_date'], style1)
-        table.write(i + 1, 5, datas[i]['title'], style1)
+        table.write(i + 1, 5, r'\{}.{}'.format(datas[i]['title'], datas[i]['link_url'].split('.')[-1]), style1)
 
     # 注意：如果对同一个单元格重复操作，会引发overwrite Exception，想要取消该功能，需要在添加工作表时指定为可覆盖，像下面这样
     # table=data.add_sheet('name',cell_overwrite_ok=True)
@@ -442,28 +455,28 @@ def check_fund_2(fund_code, fund_name):
 
 
 if __name__ == '__main__':
-    # version = int(time.time())
-    version = '1577674169'
+    version = int(time.time())
+    # version = '1577674169'
     print('当前版本号:', version)
 
     diff_list = []
     fund_list = get_fund()
 
-    # pbar = tqdm(fund_list)
-    # for fund in pbar:
-    #     check_fund_1(fund['fund_code'], fund['fund_name'])
-    #     pbar.set_description("进度 %s" % fund)
+    pbar = tqdm(fund_list)
+    for fund in pbar:
+        check_fund_1(fund['fund_code'], fund['fund_name'])
+        pbar.set_description("进度 %s" % fund)
 
     # doc_to_docx_all()
 
-    pbar = tqdm(fund_list)
-    for fund in pbar:
-        diff = check_fund_2(fund['fund_code'], fund['fund_name'])
-        diff_list.extend(diff)
-        pbar.set_description("进度 %s" % fund)
-
-    print(diff_list)
-    create_diff_excel(diff_list)
+    # pbar = tqdm(fund_list)
+    # for fund in pbar:
+    #     diff = check_fund_2(fund['fund_code'], fund['fund_name'])
+    #     diff_list.extend(diff)
+    #     pbar.set_description("进度 %s" % fund)
+    #
+    # print(diff_list)
+    # create_diff_excel(diff_list)
 
     # a = string_similar('创1金合信鑫收益灵活配置混合型证券投资基金招募说明书（更新）摘要（2017年第2号）', '创金合信鑫收益灵活配置混合型证券投资基金招募说明书（更新）摘要（2017年第2号）')
     # print('sdsad:' + float(a))

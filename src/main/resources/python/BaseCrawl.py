@@ -1,12 +1,18 @@
-class BaseCrawl(object):
+from abc import ABCMeta, abstractmethod
 
-    def crawl_history(self):
+
+# 接口类:
+class BaseCrawl(metaclass=ABCMeta):
+
+    @abstractmethod
+    def crawl_info(self):
         """
-        子类继承父类必须重写crawl_history方法
+        子类继承父类必须重写crawl_info方法
         :return:
         """
-        raise NotImplementedError("crawl_history() 方法是必须的")
+        raise NotImplementedError("crawl_info() 方法是必须的")
 
+    @abstractmethod
     def crawl_year_report(self):
         """
         子类继承父类必须重写crawl_year_report方法
