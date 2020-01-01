@@ -287,6 +287,8 @@ def create_excel(fund_code, fund_name, datas):
         table.write(i + 1, 2, datas[i]['title'], style1)
         table.write(i + 1, 3, datas[i]['short_date'].split('-')[0], style1)
         table.write(i + 1, 4, datas[i]['short_date'], style1)
+        if not datas[i]['link_url']:
+            print(fund_code, datas[i]['short_date'],datas[i]['title'])
         table.write(i + 1, 5, r'\{}.{}'.format(datas[i]['title'], datas[i]['link_url'].split('.')[-1]), style1)
 
     # 注意：如果对同一个单元格重复操作，会引发overwrite Exception，想要取消该功能，需要在添加工作表时指定为可覆盖，像下面这样
