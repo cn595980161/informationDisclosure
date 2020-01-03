@@ -12,24 +12,68 @@
 <!--<legend>標題</legend>-->
 <!--</fieldset>-->
 
-<div class="layui-tab">
+<div class="layui-tab" lay-filter="menu">
     <ul class="layui-tab-title">
-        <li class="layui-this">网站设置</li>
-        <li>用户管理</li>
-        <li>权限分配</li>
-        <li>商品管理</li>
-        <li>日报管理</li>
+        <li class="layui-this" lay-id="1">公告设置</li>
+        <li lay-id="2">用户管理</li>
+        <li lay-id="3">权限分配</li>
+        <li lay-id="4">商品管理</li>
+        <li lay-id="5">日报管理</li>
     </ul>
     <div class="layui-tab-content">
         <div class="layui-tab-item layui-show">
-            1. 高度默认自适应，也可以随意固宽。
-            <br>2. Tab进行了响应式处理，所以无需担心数量多少。
+            <iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>
         </div>
         <div class="layui-tab-item">内容2</div>
         <div class="layui-tab-item">内容3</div>
         <div class="layui-tab-item">内容4</div>
         <div class="layui-tab-item">内容5</div>
     </div>
+</div>
+<style>
+    .runtest {
+        position: relative;
+        display: none;
+    }
+
+    .runtest textarea {
+        display: block;
+        width: 300px;
+        height: 160px;
+        border: 10px solid #F8F8F8;
+        border-top-width: 0;
+        padding: 10px;
+        line-height: 20px;
+        overflow: auto;
+        background-color: #3F3F3F;
+        color: #eee;
+        font-size: 12px;
+        font-family: Courier New;
+    }
+
+    .runtest a {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+    }
+
+    .layer-photos-demo {
+        margin: 10px 0;
+    }
+
+    .layer-photos-demo img {
+        width: 160px;
+        height: 100px;
+    }
+</style>
+<div class="runtest">
+  <textarea class="site-demo-text" id="testmain">
+layer.open({
+  title: '在线调试'
+  ,content: '可以填写任意的layer代码'
+});
+  </textarea>
+    <a href="javascript:;" class="layui-btn layui-btn-normal" onclick="try{new Function(testmain.value)();}catch(e){alert('语句异常：'+e.message)}">立即运行</a>
 </div>
 
 <script src="../plugins/layui/layui.js"></script>
@@ -39,9 +83,47 @@
             , form = layui.form
             , element = layui.element;
 
+        // element.tabAdd('menu',
+        //     {
+        //         title: '公告管理'
+        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
+        //         , id: '1'
+        //     },
+        //     {
+        //         title: '比较'
+        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
+        //         , id: '2'
+        //     },
+        //     {
+        //         title: '报社管理'
+        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
+        //         , id: '3'
+        //     });
+
+        layer.open({
+            type: 1
+            , title: '在线调试'
+            , id: 'Lay_layer_debug'
+            , content: '滑稽sdfsfsdfsdf\nsdasdasdsadd\nasdasdsad'
+            , shade: false
+            , offset: 'rb'
+            , resize: false
+            , success: function (layero, index) {
+                layer.style(index, {
+                    marginLeft: -220
+                });
+                //debug.hide();
+            }
+            , end: function () {
+                //debug.show();
+            }
+        });
+
+
         element.on('nav(menu)', function (elem) {
-            console.log(elem); //得到当前点击的DOM对象
-            layer.msg(elem.text());
+            // location.hash = 'test1=' + this.getAttribute('lay-id');
+            // console.log(elem); //得到当前点击的DOM对象
+            // layer.msg(elem.text());
         });
 
         // layer.msg('Hello World');
