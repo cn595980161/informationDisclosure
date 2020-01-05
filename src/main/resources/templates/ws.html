@@ -83,7 +83,7 @@
         }
 
         document.getElementById('message').innerHTML += (userId + "给" + sendUserId + "发送消息,消息内容为---->>" + message + '<br/>');
-        message = message + "," + sendUserId//将要发送的信息和内容拼起来，以便于服务端知道消息要发给谁
+        message = JSON.stringify({type: 'message', userId: sendUserId, message: message})//将要发送的信息和内容拼起来，以便于服务端知道消息要发给谁
         websocket.send(message);
     }
 </script>

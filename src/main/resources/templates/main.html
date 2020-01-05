@@ -3,8 +3,44 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>开始使用layui</title>
+    <title>信息披露</title>
     <link rel="stylesheet" href="../plugins/layui/css/layui.css">
+    <style>
+        .runtest {
+            position: relative;
+            display: none;
+        }
+
+        .runtest textarea {
+            display: block;
+            width: 300px;
+            height: 160px;
+            border: 10px solid #F8F8F8;
+            border-top-width: 0;
+            padding: 10px;
+            line-height: 20px;
+            overflow: auto;
+            background-color: #3F3F3F;
+            color: #eee;
+            font-size: 12px;
+            font-family: Courier New;
+        }
+
+        .runtest a {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .layer-photos-demo {
+            margin: 10px 0;
+        }
+
+        .layer-photos-demo img {
+            width: 160px;
+            height: 100px;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,56 +52,22 @@
     <ul class="layui-tab-title">
         <li class="layui-this" lay-id="1">公告设置</li>
         <li lay-id="2">用户管理</li>
-        <li lay-id="3">权限分配</li>
+        <li lay-id="3">报社管理</li>
         <li lay-id="4">商品管理</li>
         <li lay-id="5">日报管理</li>
     </ul>
     <div class="layui-tab-content">
         <div class="layui-tab-item layui-show">
+            <iframe src="/notice" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>
+        </div>
+        <div class="layui-tab-item">
             <iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>
         </div>
-        <div class="layui-tab-item">内容2</div>
         <div class="layui-tab-item">内容3</div>
         <div class="layui-tab-item">内容4</div>
         <div class="layui-tab-item">内容5</div>
     </div>
 </div>
-<style>
-    .runtest {
-        position: relative;
-        display: none;
-    }
-
-    .runtest textarea {
-        display: block;
-        width: 300px;
-        height: 160px;
-        border: 10px solid #F8F8F8;
-        border-top-width: 0;
-        padding: 10px;
-        line-height: 20px;
-        overflow: auto;
-        background-color: #3F3F3F;
-        color: #eee;
-        font-size: 12px;
-        font-family: Courier New;
-    }
-
-    .runtest a {
-        position: absolute;
-        right: 20px;
-        bottom: 20px;
-    }
-
-    .layer-photos-demo {
-        margin: 10px 0;
-    }
-
-    .layer-photos-demo img {
-        width: 160px;
-        height: 100px;
-    }
-</style>
 <div class="runtest">
   <textarea class="site-demo-text" id="testmain">
 layer.open({
@@ -82,43 +84,6 @@ layer.open({
         var layer = layui.layer
             , form = layui.form
             , element = layui.element;
-
-        // element.tabAdd('menu',
-        //     {
-        //         title: '公告管理'
-        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
-        //         , id: '1'
-        //     },
-        //     {
-        //         title: '比较'
-        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
-        //         , id: '2'
-        //     },
-        //     {
-        //         title: '报社管理'
-        //         , content: '<iframe src="/test11" width="100%" height="500px;" style="border:0px;" scrolling="no"></iframe>'
-        //         , id: '3'
-        //     });
-
-        layer.open({
-            type: 1
-            , title: '在线调试'
-            , id: 'Lay_layer_debug'
-            , content: '滑稽sdfsfsdfsdf\nsdasdasdsadd\nasdasdsad'
-            , shade: false
-            , offset: 'rb'
-            , resize: false
-            , success: function (layero, index) {
-                layer.style(index, {
-                    marginLeft: -220
-                });
-                //debug.hide();
-            }
-            , end: function () {
-                //debug.show();
-            }
-        });
-
 
         element.on('nav(menu)', function (elem) {
             // location.hash = 'test1=' + this.getAttribute('lay-id');

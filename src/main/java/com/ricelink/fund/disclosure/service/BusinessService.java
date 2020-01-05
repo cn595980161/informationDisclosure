@@ -1,12 +1,15 @@
 package com.ricelink.fund.disclosure.service;
 
-import org.springframework.stereotype.Service;
-
 public interface BusinessService {
 
     /**
      * 爬取基本信息
      */
-    public void crawlBase();
+    String crawlBase(String userId);
 
+    /**
+     * 取消爬取基本信息
+     * @param processId
+     */
+    void cancelUpdateNotice(String processId);
 }

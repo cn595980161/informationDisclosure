@@ -42,4 +42,9 @@ public class IndexController {
     public String test() {
         return "test";
     }
+
+    @RequestMapping(value = "/notice")
+    public String notoce() {
+        return "notice_manager";
+    }
 }

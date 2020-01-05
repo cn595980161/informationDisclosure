@@ -1,5 +1,6 @@
 package com.ricelink.fund.disclosure.server;
 
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
@@ -82,13 +83,17 @@ public class ProductWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) {
         System.out.println("来自客户端的消息:" + message);
-        //要发送人的用户uuid
-        String sendUserId = message.split(",")[1];
-        //发送的信息
-        String sendMessage = message.split(",")[0];
-        //给指定的人发消息
-        sendToUser(sendUserId, sendMessage);
-
+        JSONObject messageData = JSONObject.parseObject(message);
+        if ("heartBeat".equals(messageData.getString("type"))) {
+            System.out.println("心跳包");
+        } else {
+            //要发送人的用户uuid
+            String sendUserId = messageData.getString("userId");
+            //发送的信息
+            String sendMessage = messageData.getString("message");
+            //给指定的人发消息
+            sendToUser(sendUserId, sendMessage);
+        }
     }
 
     /**
@@ -122,7 +127,7 @@ public class ProductWebSocket {
 
         try {
             if (webSocketSet.get(sendUserId) != null) {
-                webSocketSet.get(sendUserId).sendMessage("系统给我发来消息，消息内容为--->>" + message);
+                webSocketSet.get(sendUserId).sendMessage(message);
             } else {
                 System.out.println("消息接受人:" + sendUserId + "已经离线！");
             }

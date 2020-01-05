@@ -1,15 +1,16 @@
 package com.ricelink.fund.disclosure.web;
 
+import com.ricelink.fund.disclosure.core.ResponseGenerate;
+import com.ricelink.fund.disclosure.core.ResponseMsg;
 import com.ricelink.fund.disclosure.model.Fund;
-import com.ricelink.fund.disclosure.server.ProductWebSocket;
+import com.ricelink.fund.disclosure.service.BusinessService;
 import com.ricelink.fund.disclosure.util.ExcelUtils;
-import com.ricelink.fund.disclosure.util.ExecuteCmdUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
 
@@ -18,8 +19,8 @@ import java.util.List;
 @RequestMapping("api")
 public class ApiController {
 
-    @Resource
-    private ProductWebSocket productWebSocket;
+    @Autowired
+    BusinessService businessService;
 
     /**
      * 导入
@@ -35,14 +36,18 @@ public class ApiController {
         return personVoList;
     }
 
-    @GetMapping("test")
     @ResponseBody
-    public Object test(@RequestParam String userId) {
-        ExecuteCmdUtil.execute(msg -> {
-            System.out.println(msg);
-            productWebSocket.systemSendToUser(userId, msg);
-        }, "python3", "E:/项目/informationDisclosure/src/main/resources/python/cjhxCrawl.py");
-        return "ojbk";
+    @GetMapping("updateNotice")
+    public Object updateNotice(@RequestParam String userId) {
+        String processId = businessService.crawlBase(userId);
+        return ResponseGenerate.success("操作成功!", processId);
+    }
+
+    @ResponseBody
+    @GetMapping("cancelUpdateNotice")
+    public Object cancelUpdateNotice(@RequestParam String processId) {
+        businessService.cancelUpdateNotice(processId);
+        return ResponseGenerate.success("操作成功!");
     }
 
 }
