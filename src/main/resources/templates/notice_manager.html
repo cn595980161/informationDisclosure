@@ -67,23 +67,32 @@
         var $ = layui.$, active = {
             updateNotice: function () {
                 var userId = getUuid();
-                waitMsg(userId);
                 $.ajax({
                     url: "/api/updateNotice?userId=" + userId,
                     success: function (data, status) {
                         debugger
                         // alert("Data: " + data + "nStatus: " + status);
-                        processId = data.data;
+                        if (data.code === 200) {
+                            waitMsg(userId);
+                            processId = data.data;
+                        } else {
+                            //关闭socket
+                            // socket.close();
+                            layer.msg(data.msg, {icon: 5});
+                        }
+
                     }
                 });
             }
             , cancelUpdateNotice: function () {
-                $.ajax({
-                    url: "/api/cancelUpdateNotice?processId=" + processId,
-                    success: function (data, status) {
-                        alert("Data: " + data + "nStatus: " + status);
-                    }
-                });
+                if (processId) {
+                    $.ajax({
+                        url: "/api/cancelUpdateNotice?processId=" + processId,
+                        success: function (data, status) {
+                            alert("Data: " + data + "nStatus: " + status);
+                        }
+                    });
+                }
             }
             , isAll: function () { //验证是否全选
                 var checkStatus = table.checkStatus('idTest');

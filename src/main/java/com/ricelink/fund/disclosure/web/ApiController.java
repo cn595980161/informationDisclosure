@@ -36,13 +36,24 @@ public class ApiController {
         return personVoList;
     }
 
+    /**
+     * 更新公告信息
+     *
+     * @param userId
+     * @return
+     */
     @ResponseBody
     @GetMapping("updateNotice")
-    public Object updateNotice(@RequestParam String userId) {
-        String processId = businessService.crawlBase(userId);
-        return ResponseGenerate.success("操作成功!", processId);
+    public ResponseMsg updateNotice(@RequestParam String userId) {
+        return businessService.crawlBase(userId);
     }
 
+    /**
+     * 取消更新公告信息
+     *
+     * @param processId
+     * @return
+     */
     @ResponseBody
     @GetMapping("cancelUpdateNotice")
     public Object cancelUpdateNotice(@RequestParam String processId) {

@@ -1,11 +1,13 @@
 package com.ricelink.fund.disclosure.service;
 
+import com.ricelink.fund.disclosure.core.ResponseMsg;
+
 public interface BusinessService {
 
     /**
      * 爬取基本信息
      */
-    String crawlBase(String userId);
+    ResponseMsg crawlBase(String userId);
 
     /**
      * 取消爬取基本信息

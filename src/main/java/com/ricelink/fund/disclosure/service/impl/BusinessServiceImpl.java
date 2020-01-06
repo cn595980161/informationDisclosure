@@ -1,15 +1,20 @@
 package com.ricelink.fund.disclosure.service.impl;
 
+import com.ricelink.fund.disclosure.core.ResponseGenerate;
+import com.ricelink.fund.disclosure.core.ResponseMsg;
+import com.ricelink.fund.disclosure.server.ExecuteCmdServer;
 import com.ricelink.fund.disclosure.server.ProductWebSocket;
 import com.ricelink.fund.disclosure.service.BusinessService;
-import com.ricelink.fund.disclosure.server.ExecuteCmdServer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 @Service
 @Slf4j
+@PropertySource(value = "classpath:application.properties", encoding = "UTF-8")
 public class BusinessServiceImpl implements BusinessService {
 
     @Resource
@@ -19,17 +24,22 @@ public class BusinessServiceImpl implements BusinessService {
     private ExecuteCmdServer executeCmdServer;
 
     @Override
-    public String crawlBase(String userId) {
+    public ResponseMsg crawlBase(String userId) {
         log.info("开始爬取基本信息");
-        String processId = executeCmdServer.createProcess("python", "D:\\项目\\informationDisclosure\\src\\main\\resources\\python\\cjhxCrawl.py");
-        executeCmdServer.asyncExecute(msg -> {
-            System.out.println(msg);
-            productWebSocket.systemSendToUser(userId, msg);
-        }, processId);
-
-        System.out.println(processId);
-        log.info("结束爬取基本信息");
-        return processId;
+        try {
+            String processId = executeCmdServer.createProcess("python", "cjhxCrawl.py");
+            System.out.println(processId);
+            executeCmdServer.asyncExecute(msg -> {
+                System.out.println(msg);
+                productWebSocket.systemSendToUser(userId, msg);
+            }, processId);
+            return ResponseGenerate.success("操作成功!", processId);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseGenerate.fail(e.getMessage());
+        } finally {
+            log.info("结束爬取基本信息");
+        }
     }
 
     @Override
