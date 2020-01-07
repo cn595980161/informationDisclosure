@@ -20,9 +20,9 @@ domain = 'http://www.cjhxfund.com'
 
 version = ''
 
-year_report_path = r'.\year_report'
+year_report_path = r'E:\info_report'
 
-notice_path = r'.\notice'
+notice_path = r'E:\info_notice'
 
 headers = {
     'Content-Length': '83',
@@ -288,7 +288,7 @@ def create_excel(fund_code, fund_name, datas):
         table.write(i + 1, 3, datas[i]['short_date'].split('-')[0], style1)
         table.write(i + 1, 4, datas[i]['short_date'], style1)
         if not datas[i]['link_url']:
-            print(fund_code, datas[i]['short_date'],datas[i]['title'])
+            print(fund_code, datas[i]['short_date'], datas[i]['title'])
         table.write(i + 1, 5, r'\{}.{}'.format(datas[i]['title'], datas[i]['link_url'].split('.')[-1]), style1)
 
     # 注意：如果对同一个单元格重复操作，会引发overwrite Exception，想要取消该功能，需要在添加工作表时指定为可覆盖，像下面这样
@@ -467,7 +467,8 @@ if __name__ == '__main__':
     pbar = tqdm(fund_list)
     for fund in pbar:
         check_fund_1(fund['fund_code'], fund['fund_name'])
-        pbar.set_description("进度 %s" % fund)
+        # pbar.set_description("进度 %s" % '{}:{}'.format(fund['fund_code'], fund['fund_name']))
+        pbar.set_description("进度 %s" % fund['fund_code'])
 
     # doc_to_docx_all()
 

@@ -6,7 +6,6 @@ import com.ricelink.fund.disclosure.server.ExecuteCmdServer;
 import com.ricelink.fund.disclosure.server.ProductWebSocket;
 import com.ricelink.fund.disclosure.service.BusinessService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -14,7 +13,6 @@ import java.io.IOException;
 
 @Service
 @Slf4j
-@PropertySource(value = "classpath:application.properties", encoding = "UTF-8")
 public class BusinessServiceImpl implements BusinessService {
 
     @Resource
@@ -27,7 +25,7 @@ public class BusinessServiceImpl implements BusinessService {
     public ResponseMsg crawlBase(String userId) {
         log.info("开始爬取基本信息");
         try {
-            String processId = executeCmdServer.createProcess("python", "cjhxCrawl.py");
+            String processId = executeCmdServer.createProcess("python3", "cjhxCrawl.py");
             System.out.println(processId);
             executeCmdServer.asyncExecute(msg -> {
                 System.out.println(msg);

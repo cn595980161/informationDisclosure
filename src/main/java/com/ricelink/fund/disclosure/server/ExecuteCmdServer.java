@@ -1,6 +1,7 @@
 package com.ricelink.fund.disclosure.server;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+//@PropertySource(value = "classpath:application.properties", encoding = "UTF-8")
 public class ExecuteCmdServer {
 
     @Value("${setting.python.path}")
