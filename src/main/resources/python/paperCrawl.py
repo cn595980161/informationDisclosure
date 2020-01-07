@@ -24,7 +24,7 @@ headers_shzqb = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 }
 
-paper_path = r'E:\securities_paper'
+paper_path = r'D:\securities_paper'
 
 search_key = '创金合信'
 
@@ -82,8 +82,11 @@ def parse_zqrb(date, content):
         title = paper.text_content().strip()
         if search_key in title:
             # 去除
-            title = re.sub('[（|(]下转.*版[）|)]', '', title)
-            title = re.sub('[（|(]上接.*版[）|)]', '', title)
+            if re.search('[上接|下转]', title):
+                title = re.sub('\(下转\S{2,4}版\)', '', title)
+                title = re.sub('（下转\S{2,4}版）', '', title)
+                title = re.sub('\(上接\S{2,4}版\)', '', title)
+                title = re.sub('（上接\S{2,4}版）', '', title)
             data = {'title': title, 'date': date, 'source': '证券日报电子报'}
             # print(data)
             data_list.append(data)
@@ -319,8 +322,8 @@ if __name__ == '__main__':
     zqsb_list = []
     zgzqb_list = []
     shzqb_list = []
-    dates = list(get_date('2014-7-1', '2019-12-26'))
-    # dates = list(get_date('2017-11-12', '2017-11-12'))
+    dates = list(get_date('2014-7-1', '2020-01-07'))
+    # dates = list(get_date('2018-09-28', '2018-09-28'))
     pbar = tqdm(dates)
     for date in pbar:
         # print(date)
@@ -340,10 +343,10 @@ if __name__ == '__main__':
 
         pbar.set_description("进度 %s" % str(date)[0:10])
 
-    # save_csv('paper\证券日报电子报', zqrb_list)
-    # save_csv('paper\证券时报电子报', zqsb_list)
-    # save_csv('paper\中国证券报', zgzqb_list)
-    # save_csv('paper\上海证券报', shzqb_list)
+    save_csv('paper\证券日报电子报', zqrb_list)
+    save_csv('paper\证券时报电子报', zqsb_list)
+    save_csv('paper\中国证券报', zgzqb_list)
+    save_csv('paper\上海证券报', shzqb_list)
 
     # create_excel(zqrb_list, '证券日报电子报')
     # create_excel(zqsb_list, '证券时报电子报')
