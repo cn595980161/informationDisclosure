@@ -42,6 +42,7 @@
     <div class="layui-btn-group btnGroup">
         <button type="button" class="layui-btn layui-btn-primary" data-type="updateNotice">更新数据</button>
         <button type="button" class="layui-btn layui-btn-normal" data-type="cancelUpdateNotice">取消</button>
+        <button type="button" class="layui-btn layui-btn-normal" data-type="downloadNotice">下载公告列表</button>
     </div>
 </fieldset>
 
@@ -94,9 +95,8 @@
                     });
                 }
             }
-            , isAll: function () { //验证是否全选
-                var checkStatus = table.checkStatus('idTest');
-                layer.msg(checkStatus.isAll ? '全选' : '未全选')
+            , downloadNotice: function () {
+                window.location.href = "/api/downloadNotice?fileName=1";
             }
         };
 

@@ -6,11 +6,17 @@ import com.ricelink.fund.disclosure.model.Fund;
 import com.ricelink.fund.disclosure.service.BusinessService;
 import com.ricelink.fund.disclosure.util.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -59,6 +65,17 @@ public class ApiController {
     public Object cancelUpdateNotice(@RequestParam String processId) {
         businessService.cancelUpdateNotice(processId);
         return ResponseGenerate.success("操作成功!");
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "downloadNotice")
+    public ResponseEntity<byte[]> download(@RequestParam("fileName") String filename) throws IOException {
+
+        File file = new File("E:\\info_disc_flask\\全量公告.xls");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDispositionFormData("attachment", new String(file.getName().getBytes("utf-8"), "ISO8859-1"));
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        return new ResponseEntity<>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
     }
 
 }
