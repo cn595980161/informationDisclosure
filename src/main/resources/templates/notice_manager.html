@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.springframework.org/schema/mvc">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -38,13 +38,15 @@
 <body>
 
 <fieldset class="layui-elem-field" style="margin-top: 30px;">
-    <legend>按钮主题</legend>
+    <legend>操作</legend>
     <div class="layui-btn-group btnGroup">
         <button type="button" class="layui-btn layui-btn-primary" data-type="updateNotice">更新数据</button>
         <button type="button" class="layui-btn layui-btn-normal" data-type="cancelUpdateNotice">取消</button>
         <button type="button" class="layui-btn layui-btn-normal" data-type="downloadNotice">下载公告列表</button>
     </div>
 </fieldset>
+
+<table id="fund_table" lay-filter="fund_table"></table>
 
 <div class="runtest">
   <textarea id="console">
@@ -53,14 +55,14 @@
 </div>
 
 <script src="../plugins/layui/layui.js"></script>
-<script>
+<script type="text/javascript" th:inline="none">
+
     layui.extend({
         socket: '{/}plugins/extend/socket'
-    })
-    layui.use(['layer', 'form', 'element', 'socket'], function () {
+    });
+
+    layui.use(['layer', 'socket'], function () {
         var layer = layui.layer
-            , form = layui.form
-            , element = layui.element
             , socket = layui.socket;
 
         var processId;

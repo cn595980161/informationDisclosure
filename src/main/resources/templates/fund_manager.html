@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.springframework.org/schema/mvc">
+<head>
+    <meta charset="UTF-8">
+    <title>基金设置</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../plugins/layui/css/layui.css" media="all">
+</head>
+<body>
+
+<fieldset class="layui-elem-field" style="margin-top: 30px;">
+    <legend>操作</legend>
+    <div class="layui-btn-group btnGroup">
+        <button type="button" class="layui-btn layui-btn-primary" data-type="importFund">导入基金</button>
+        <button type="button" class="layui-btn layui-btn-primary" data-type="downloadModel">下载模板</button>
+    </div>
+</fieldset>
+
+<table id="fund_table" lay-filter="fund_table"></table>
+
+<div class="import" style="display: none">
+    <div class="layui-upload">
+        <button type="button" class="layui-btn layui-btn-normal" id="selectFile">选择文件</button>
+        <button type="button" class="layui-btn" id="startUpload">开始上传</button>
+    </div>
+</div>
+
+<script src="../plugins/layui/layui.js"></script>
+<script type="text/javascript" th:inline="none">
+
+    layui.use(['layer', 'upload', 'table'], function () {
+        var $ = layui.$
+            , layer = layui.layer
+            , table = layui.table
+            , upload = layui.upload;
+
+        query_fund_list();
+
+        var active = {
+            importFund: function () {
+                layer.open({
+                    type: 1
+                    , title: '导入基金'
+                    // , id: 'Lay_layer_debug'
+                    , content: $('.import')
+                    , area: ['400px', '200px']
+                    , shade: false
+                    // , offset: 'rb'
+                    , resize: false
+                    , success: function (layero, index) {
+                        upload.render({
+                            elem: '#selectFile'
+                            , url: '/api/upload'
+                            , auto: false
+                            , exts: 'xls|xlsx'
+                            //,multiple: true
+                            , bindAction: '#startUpload'
+                            , done: function (res) {
+                                layer.msg('上传成功');
+                                render_fund_list(res.data);
+                            }
+                        });
+                    }
+                    , end: function () {
+                    }
+                });
+            }
+            , downloadModel: function () {
+                window.location.href = "/api/downloadNotice?fileName=1";
+            }
+        };
+
+        //渲染基金清单表格
+        function render_fund_list(data) {
+            table.render({
+                elem: '#fund_table'
+                , size: 'sm'
+                , data: data
+                , cols: [[
+                    {field: 'fundCode', title: '基金编号', width: 80}
+                    , {field: 'fundName', title: '基金名称', width: 80}
+                ]]
+            });
+        }
+
+        //查询基金清单
+        function query_fund_list() {
+            $.ajax({
+                url: "/api/queryFundList",
+                success: function (res, status) {
+                    if (res.code === 200) {
+                        render_fund_list(res.data);
+                    } else {
+                        layer.msg(data.msg, {icon: 5});
+                    }
+
+                }
+            });
+        }
+
+        $('.btnGroup .layui-btn').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+    });
+</script>
+</body>
+</html>

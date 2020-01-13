@@ -8,6 +8,7 @@ import com.ricelink.fund.disclosure.util.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,8 +26,31 @@ import java.util.List;
 @RequestMapping("api")
 public class ApiController {
 
+    @Value("${setting.project.path}")
+    private String projectPath;
+
     @Autowired
     BusinessService businessService;
+
+    /**
+     * 上传文件
+     *
+     * @param file
+     */
+    @ResponseBody
+    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    public ResponseMsg upload(@RequestParam("file") MultipartFile file) throws IOException {
+
+        long start = System.currentTimeMillis();
+        List<Fund> fundList = ExcelUtils.importExcel(file, Fund.class);
+        log.debug(fundList.toString());
+        log.debug("导入excel所花时间：" + (System.currentTimeMillis() - start));
+
+        //复制文件
+        FileUtils.copyInputStreamToFile(file.getInputStream(), new File(projectPath, "基金清单.xlsx"));
+
+        return ResponseGenerate.success("操作成功!", fundList);
+    }
 
     /**
      * 导入
@@ -40,6 +64,20 @@ public class ApiController {
         log.debug(personVoList.toString());
         log.debug("导入excel所花时间：" + (System.currentTimeMillis() - start));
         return personVoList;
+    }
+
+    /**
+     * 查询基金清单
+     *
+     * @return
+     * @throws IOException
+     */
+    @ResponseBody
+    @RequestMapping(value = "/queryFundList", method = RequestMethod.GET)
+    public ResponseMsg queryFundList() throws IOException {
+        List<Fund> fundList = ExcelUtils.importExcel(projectPath + File.separator + "基金清单.xlsx", 1, 1, Fund.class);
+        log.debug(fundList.toString());
+        return ResponseGenerate.success("成功!", fundList);
     }
 
     /**
@@ -62,11 +100,18 @@ public class ApiController {
      */
     @ResponseBody
     @GetMapping("cancelUpdateNotice")
-    public Object cancelUpdateNotice(@RequestParam String processId) {
+    public ResponseMsg cancelUpdateNotice(@RequestParam String processId) {
         businessService.cancelUpdateNotice(processId);
         return ResponseGenerate.success("操作成功!");
     }
 
+    /**
+     * 下载公告
+     *
+     * @param filename
+     * @return
+     * @throws IOException
+     */
     @ResponseBody
     @RequestMapping(value = "downloadNotice")
     public ResponseEntity<byte[]> download(@RequestParam("fileName") String filename) throws IOException {

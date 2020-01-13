@@ -43,6 +43,11 @@ public class IndexController {
         return "test";
     }
 
+    @RequestMapping(value = "/fund")
+    public String fund() {
+        return "fund_manager";
+    }
+
     @RequestMapping(value = "/notice")
     public String notoce() {
         return "notice_manager";
