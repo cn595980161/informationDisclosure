@@ -7,6 +7,7 @@ import com.ricelink.fund.disclosure.service.BusinessService;
 import com.ricelink.fund.disclosure.util.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -75,9 +76,14 @@ public class ApiController {
     @ResponseBody
     @RequestMapping(value = "/queryFundList", method = RequestMethod.GET)
     public ResponseMsg queryFundList() throws IOException {
-        List<Fund> fundList = ExcelUtils.importExcel(projectPath + File.separator + "基金清单.xlsx", 1, 1, Fund.class);
-        log.debug(fundList.toString());
-        return ResponseGenerate.success("成功!", fundList);
+        File file = new File(projectPath, "基金清单.xlsx");
+        if (file.exists()) {
+            List<Fund> fundList = ExcelUtils.importExcel(projectPath + File.separator + "基金清单.xlsx", 1, 1, Fund.class);
+            log.debug(fundList.toString());
+            return ResponseGenerate.success("成功!", fundList);
+        } else {
+            return ResponseGenerate.success("未查询到文件!");
+        }
     }
 
     /**

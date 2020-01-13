@@ -25,7 +25,7 @@ public class BusinessServiceImpl implements BusinessService {
     public ResponseMsg crawlBase(String userId) {
         log.info("开始爬取基本信息");
         try {
-            String processId = executeCmdServer.createProcess("python3", "cjhxCrawl.py");
+            String processId = executeCmdServer.createProcess("python", "CjhxCrawl.py");
             System.out.println(processId);
             executeCmdServer.asyncExecute(msg -> {
                 System.out.println(msg);
