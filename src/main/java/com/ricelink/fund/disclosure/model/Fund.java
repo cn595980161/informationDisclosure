@@ -10,9 +10,9 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 public class Fund implements Serializable {
 
-    @Excel(name = "基金编号", orderNum = "0", width = 15)
+    @Excel(name = "产品代码", orderNum = "0", width = 15)
     private String fundCode;
 
-    @Excel(name = "基金名称", orderNum = "1", width = 15)
+    @Excel(name = "账套全称", orderNum = "1", width = 15)
     private String fundName;
 }

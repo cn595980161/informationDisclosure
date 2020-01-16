@@ -52,4 +52,19 @@ public class IndexController {
     public String notoce() {
         return "notice_manager";
     }
+
+    @RequestMapping(value = "/paper")
+    public String paper() {
+        return "paper_manager";
+    }
+
+    @RequestMapping(value = "/rule")
+    public String rule() {
+        return "rule_manager";
+    }
+
+    @RequestMapping(value = "/report")
+    public String report() {
+        return "report_manager";
+    }
 }
